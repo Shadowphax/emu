@@ -5,7 +5,7 @@ Include: yum
 UpdateURL: http://mirror.centos.org/centos-%{OSVERSION}/%{OSVERSION}/updates/$basearch/
 
 %environment
-export PATH=/opt/eman2/bin:$PATH
+export PATH=/opt/eman2/bin:/opt/ctffind/bin_compat:$PATH
 export INSTALLER=/installer
 
 %runscript
@@ -13,26 +13,30 @@ export INSTALLER=/installer
 
 %post
 	# Create Installer Directory
-	mkdir -p /installer 
-	export INSTALLER=/installer 
+	mkdir -p /installer
+	export INSTALLER=/installer
 
-	# Installation of application dependencies from YUM. 
-
+	# Installation of application dependencies from YUM.
 	wget -O $INSTALLER/epel-release-latest-7.noarch.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && rpm -ivh $INSTALLER/epel-release-latest-7.noarch.rpm
-        yum makecache
+  yum makecache
+	yum -y install vim-minimal libXrender-devel.x86_64 libXrender.x86_64 libSM.x86_64 libSM-devel.x86_64 fontconfig freetype freetype-devel fontconfig-devel libstdc++ mesa-libGLU.x86_64 mesa-libGLU-devel.x86_64 wget bzip2 gcc-gfortran.x86_64 libgfortran.x86_64 gcc-c++ wxBase3.x86_64 wxGTK3-devel.x86_64 wxGTK3.x86_64
 
-    	yum -y install vim-minimal libXrender-devel.x86_64 libXrender.x86_64 libSM.x86_64 libSM-devel.x86_64 fontconfig freetype freetype-devel fontconfig-devel libstdc++ mesa-libGLU.x86_64 mesa-libGLU-devel.x86_64 wget bzip2 gcc-gfortran.x86_64 libgfortran.x86_64 gcc-c++ wxBase3.x86_64 wxGTK3-devel.x86_64 wxGTK3.x86_64
-	
 	# Installation of EMAN2 - http://ncmi.bcm.edu/ncmi/software/counter_222/software_135
-	# Authentication is required when downloading EMAN2. You will need to manually download and place the eman2.2.linux64.centos7.sh into /tmp on the host machine. 
+	# Authentication is required when downloading EMAN2. You will need to manually download and place the eman2.2.linux64.centos7.sh into /tmp on the host machine.
 	cd /tmp
 	chmod +x eman2.2.linux64.centos7.sh
-	./eman2.2.linux64.centos7.sh -b -f -p /opt/eman2 -u 
+	./eman2.2.linux64.centos7.sh -b -f -p /opt/eman2 -u
 
 	# Installation of CTFFIND4 - http://grigoriefflab.janelia.org/ctf
-	wget -O $INSTALLER/ctffind-4.1.8.tar.gz http://grigoriefflab.janelia.org/sites/all/modules/pubdnldcnt/pubdnldcnt.php?file=http://grigoriefflab.janelia.org/sites/default/files/ctffind-4.1.8.tar.gz&nid=26
-	cd $INSTALLER/ctff* 
-	mkdir build && cd build 
-	../configure --prefix=/opt/ctffind --enable-static --disable-debug --enable-optimisations --enable-openmp FC=gfortran F77=gfortran
-	make 
+	wget -O $INSTALLER/ctffind-4.1.8-linux64-compat.tar.gz http://grigoriefflab.janelia.org/sites/default/files/ctffind-4.1.8-linux64-compat.tar.gz
+  cd $INSTALLER
+  tar xfvz ctffind-4.1.8-linux64-compat.tar.gz
+  mkdir /opt/ctffind
+  mv bin_compat /opt/ctffind
+  yum install -y compat-libtiff3-3.9.4-11.el7.x86_64
 
+  # Installation of VMD - http://www.ks.uiuc.edu/Research/vmd/
+  # Authentication is required when downloading VMD. You will need to manually download and place in /tmp.
+  # Update the singularity definition file with the name of the tar.gz
+  cd /tmp
+  tar xfvz vmd-1.9.3.bin.LINUXAMD64-CUDA8-OptiX4-OSPRay111p1.opengl.tar.gz
