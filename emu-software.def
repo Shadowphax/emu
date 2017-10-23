@@ -6,17 +6,33 @@ UpdateURL: http://mirror.centos.org/centos-%{OSVERSION}/%{OSVERSION}/updates/$ba
 
 %environment
 export PATH=/opt/eman2/bin:$PATH
+export INSTALLER=/installer
 
 %runscript
     echo "This is what happens when you run the container..."
 
 %post
+	# Create Installer Directory
+	mkdir -p /installer 
+	export INSTALLER=/installer 
+
 	# Installation of application dependencies from YUM. 
 
-    	yum -y install vim-minimal libXrender-devel.x86_64 libXrender.x86_64 libSM.x86_64 libSM-devel.x86_64 fontconfig freetype freetype-devel fontconfig-devel libstdc++ mesa-libGLU.x86_64 mesa-libGLU-devel.x86_64 wget bzip2
+	wget -O $INSTALLER/epel-release-latest-7.noarch.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && rpm -ivh $INSTALLER/epel-release-latest-7.noarch.rpm
+        yum makecache
 
+    	yum -y install vim-minimal libXrender-devel.x86_64 libXrender.x86_64 libSM.x86_64 libSM-devel.x86_64 fontconfig freetype freetype-devel fontconfig-devel libstdc++ mesa-libGLU.x86_64 mesa-libGLU-devel.x86_64 wget bzip2 gcc-gfortran.x86_64 libgfortran.x86_64 gcc-c++ wxBase3.x86_64 wxGTK3-devel.x86_64 wxGTK3.x86_64
+	
 	# Installation of EMAN2 - http://ncmi.bcm.edu/ncmi/software/counter_222/software_135
 	# Authentication is required when downloading EMAN2. You will need to manually download and place the eman2.2.linux64.centos7.sh into /tmp on the host machine. 
 	cd /tmp
 	chmod +x eman2.2.linux64.centos7.sh
 	./eman2.2.linux64.centos7.sh -b -f -p /opt/eman2 -u 
+
+	# Installation of CTFFIND4 - http://grigoriefflab.janelia.org/ctf
+	wget -O $INSTALLER/ctffind-4.1.8.tar.gz http://grigoriefflab.janelia.org/sites/all/modules/pubdnldcnt/pubdnldcnt.php?file=http://grigoriefflab.janelia.org/sites/default/files/ctffind-4.1.8.tar.gz&nid=26
+	cd $INSTALLER/ctff* 
+	mkdir build && cd build 
+	../configure --prefix=/opt/ctffind --enable-static --disable-debug --enable-optimisations --enable-openmp FC=gfortran F77=gfortran
+	make 
+
